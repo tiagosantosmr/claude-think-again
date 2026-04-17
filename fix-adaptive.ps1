@@ -131,7 +131,7 @@ $content = [regex]::Replace($content, $mainPathRegex, '!1')
 # --- Patch 2: All remaining {type:"adaptive"} ---
 # Replace with {type:"enabled",budget_tokens:10000}
 Write-Host "Patch 2: Replacing remaining adaptive patterns with enabled + fixed budget..."
-$content = $content.Replace('{type:"adaptive"}', '{type:"enabled",budget_tokens:10000}')
+$content = $content.Replace('type:"adaptive"', 'type:"enabled",budget_tokens:10000')
 
 # --- Write patched file ---
 [System.IO.File]::WriteAllText($CliJs, $content)

@@ -158,7 +158,7 @@ sed -i -E 's/![a-zA-Z0-9$_]+\(process\.env\.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKIN
 # Subagent and init paths use {type:"adaptive"} in ternaries and assignments.
 # Replace with {type:"enabled",budget_tokens:10000}.
 echo "Patch 2: Replacing remaining adaptive patterns with enabled + fixed budget..."
-sed -i 's/{type:"adaptive"}/{type:"enabled",budget_tokens:10000}/g' "$CLI_JS"
+sed -i 's/type:"adaptive"/type:"enabled",budget_tokens:10000/g' "$CLI_JS"
 
 # --- Patch 3: Set env var persistently ---
 ENV_LINE='export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1'
@@ -193,7 +193,7 @@ fi
 export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1
 
 # --- Verify ---
-REMAINING=$(grep -c 'type:"adaptive"' "$CLI_JS" || true)
+REMAINING=$(grep -c 'type:"adaptive"' "$CLI_JS" 2>/dev/null || true)
 echo ""
 if [[ "$REMAINING" -eq 0 ]]; then
     echo -e "${GREEN}SUCCESS: All adaptive thinking patterns patched.${NC}"
