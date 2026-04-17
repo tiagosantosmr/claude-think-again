@@ -69,7 +69,16 @@ if (-not $CliJs) {
 
         Write-Host ""
         Write-Host "Note: The env var only covers 1 of 4 code paths." -ForegroundColor Yellow
-        Write-Host "For full patching, reinstall via: npm install -g @anthropic-ai/claude-code" -ForegroundColor Yellow
+        $claudeSymlink = (Get-Command claude -ErrorAction SilentlyContinue).Source
+        $claudeBase = $binaryInstall -replace '[\\/]versions[\\/].*$', ''
+        Write-Host "To migrate to npm (enables full patching), run:" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Remove-Item `"$claudeSymlink`""
+        Write-Host "  Remove-Item -Recurse -Force `"$claudeBase`""
+        Write-Host "  npm install -g @anthropic-ai/claude-code"
+        Write-Host ""
+        Write-Host "Your config at ~/.claude/ won't be affected." -ForegroundColor Yellow
+        Write-Host "After migrating, re-run this script for the full patch." -ForegroundColor Yellow
         exit 0
     }
 

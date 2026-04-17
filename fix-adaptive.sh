@@ -100,7 +100,16 @@ if [[ -z "$CLI_JS" ]]; then
 
         echo ""
         echo -e "${YELLOW}Note: The env var only covers 1 of 4 code paths.${NC}"
-        echo -e "${YELLOW}For full patching, reinstall via: npm install -g @anthropic-ai/claude-code${NC}"
+        CLAUDE_SYMLINK=$(which claude)
+        CLAUDE_BASE=$(echo "$BINARY_INSTALL" | sed 's|/versions/.*||')
+        echo -e "${YELLOW}To migrate to npm (enables full patching), run:${NC}"
+        echo ""
+        echo "  rm $CLAUDE_SYMLINK"
+        echo "  rm -rf $CLAUDE_BASE/"
+        echo "  npm install -g @anthropic-ai/claude-code"
+        echo ""
+        echo -e "${YELLOW}Your config at ~/.claude/ won't be affected.${NC}"
+        echo -e "${YELLOW}After migrating, re-run this script for the full patch.${NC}"
         exit 0
     fi
 

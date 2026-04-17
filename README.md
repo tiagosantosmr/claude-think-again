@@ -20,7 +20,22 @@ The scripts use regex to match the minified variable names dynamically, so they 
 | `npm install -g @anthropic-ai/claude-code` | Yes | Yes |
 | Official install script (binary) | No | Yes |
 
-If you installed via the official install script, the binary at `~/.local/share/claude/versions/` is a compiled executable — there is no `cli.js` to patch. The scripts will detect this and fall back to setting the env var only, which covers the main API path (1 of 4). For full coverage, reinstall via npm.
+If you installed via the official install script, the binary at `~/.local/share/claude/versions/` is a compiled executable — there is no `cli.js` to patch. The scripts will detect this and fall back to setting the env var only, which covers the main API path (1 of 4). For full coverage, migrate to an npm install:
+
+```bash
+# 1. Remove the binary install
+rm ~/.local/bin/claude
+rm -rf ~/.local/share/claude/
+
+# 2. Install via npm globally
+npm install -g @anthropic-ai/claude-code
+
+# 3. Verify
+which claude
+claude --version
+```
+
+Your config and settings at `~/.claude/` are separate and won't be affected.
 
 ## Usage
 
