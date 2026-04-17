@@ -20,13 +20,21 @@ CLI_JS=""
 if command -v claude &>/dev/null; then
     CLAUDE_BIN=$(which claude)
     # Resolve symlink if needed
+    RESOLVED="$CLAUDE_BIN"
     if [[ -L "$CLAUDE_BIN" ]]; then
-        CLAUDE_BIN=$(readlink -f "$CLAUDE_BIN")
+        RESOLVED=$(readlink -f "$CLAUDE_BIN")
     fi
-    CLAUDE_DIR=$(dirname "$CLAUDE_BIN")
-    CANDIDATE="$CLAUDE_DIR/node_modules/@anthropic-ai/claude-code/cli.js"
-    if [[ -f "$CANDIDATE" ]]; then
-        CLI_JS="$CANDIDATE"
+
+    # If the resolved path IS cli.js (e.g. nvm symlink), use it directly
+    if [[ "$RESOLVED" == */cli.js ]] && [[ -f "$RESOLVED" ]]; then
+        CLI_JS="$RESOLVED"
+    else
+        # Otherwise look for cli.js relative to the binary's directory
+        CLAUDE_DIR=$(dirname "$RESOLVED")
+        CANDIDATE="$CLAUDE_DIR/node_modules/@anthropic-ai/claude-code/cli.js"
+        if [[ -f "$CANDIDATE" ]]; then
+            CLI_JS="$CANDIDATE"
+        fi
     fi
 fi
 
@@ -54,10 +62,11 @@ fi
 
 if [[ -z "$CLI_JS" ]]; then
     # Check if this is a binary install (official install script)
+    # Only match ~/.local/share/claude/ — NOT generic "versions/" which can match nvm paths
     BINARY_INSTALL=""
     if command -v claude &>/dev/null; then
         RESOLVED=$(readlink -f "$(which claude)" 2>/dev/null || which claude)
-        if [[ "$RESOLVED" == *"/.local/share/claude/"* ]] || [[ "$RESOLVED" == *"/versions/"* ]]; then
+        if [[ "$RESOLVED" == *"/.local/share/claude/"* ]]; then
             BINARY_INSTALL="$RESOLVED"
         fi
     fi
@@ -101,7 +110,7 @@ if [[ -z "$CLI_JS" ]]; then
         echo ""
         echo -e "${YELLOW}Note: The env var only covers 1 of 4 code paths.${NC}"
         CLAUDE_SYMLINK=$(which claude)
-        CLAUDE_BASE=$(echo "$BINARY_INSTALL" | sed 's|/versions/.*||')
+        CLAUDE_BASE="$HOME/.local/share/claude"
         echo -e "${YELLOW}To migrate to npm (enables full patching), run:${NC}"
         echo ""
         echo "  rm $CLAUDE_SYMLINK"

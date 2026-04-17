@@ -13,10 +13,20 @@ $CliJs = $null
 # Method 1: via Get-Command
 try {
     $claudeCmd = Get-Command claude -ErrorAction Stop
-    $claudeDir = Split-Path $claudeCmd.Source -Parent
-    $candidate = Join-Path $claudeDir "node_modules\@anthropic-ai\claude-code\cli.js"
-    if (Test-Path $candidate) {
-        $CliJs = $candidate
+    $claudeSource = $claudeCmd.Source
+    # Resolve symlink if possible
+    $resolved = (Get-Item $claudeSource -ErrorAction SilentlyContinue).Target
+    if (-not $resolved) { $resolved = $claudeSource }
+
+    # If the resolved path IS cli.js, use it directly
+    if ($resolved -match "cli\.js$" -and (Test-Path $resolved)) {
+        $CliJs = $resolved
+    } else {
+        $claudeDir = Split-Path $resolved -Parent
+        $candidate = Join-Path $claudeDir "node_modules\@anthropic-ai\claude-code\cli.js"
+        if (Test-Path $candidate) {
+            $CliJs = $candidate
+        }
     }
 } catch {
     # claude not in PATH, try fallbacks
@@ -44,7 +54,7 @@ if (-not $CliJs) {
         $claudePath = (Get-Command claude -ErrorAction Stop).Source
         $resolved = (Get-Item $claudePath -ErrorAction Stop).Target
         if (-not $resolved) { $resolved = $claudePath }
-        if ($resolved -match "\.local[\\/]share[\\/]claude" -or $resolved -match "[\\/]versions[\\/]") {
+        if ($resolved -match "\.local[\\/]share[\\/]claude") {
             $binaryInstall = $resolved
         }
     } catch {}
@@ -70,7 +80,7 @@ if (-not $CliJs) {
         Write-Host ""
         Write-Host "Note: The env var only covers 1 of 4 code paths." -ForegroundColor Yellow
         $claudeSymlink = (Get-Command claude -ErrorAction SilentlyContinue).Source
-        $claudeBase = $binaryInstall -replace '[\\/]versions[\\/].*$', ''
+        $claudeBase = Join-Path $env:USERPROFILE ".local\share\claude"
         Write-Host "To migrate to npm (enables full patching), run:" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "  Remove-Item `"$claudeSymlink`""
