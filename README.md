@@ -9,7 +9,18 @@ The `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1` environment variable only covers 1
 1. **Main API path**: Forces the else-branch that uses the model-specific thinking budget (`Math.min(max_tokens - 1, model_default)`) instead of adaptive classification.
 2. **Subagent/init paths**: Replaces `{type:"adaptive"}` with `{type:"enabled",budget_tokens:10000}` — a fixed budget that ensures thinking is always active.
 
+The scripts also set the `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1` environment variable persistently as an extra safety measure.
+
 The scripts use regex to match the minified variable names dynamically, so they work across different cli.js versions.
+
+## Compatibility
+
+| Install method | Full patch (cli.js) | Env var fallback |
+|---|---|---|
+| `npm install -g @anthropic-ai/claude-code` | Yes | Yes |
+| Official install script (binary) | No | Yes |
+
+If you installed via the official install script, the binary at `~/.local/share/claude/versions/` is a compiled executable — there is no `cli.js` to patch. The scripts will detect this and fall back to setting the env var only, which covers the main API path (1 of 4). For full coverage, reinstall via npm.
 
 ## Usage
 
@@ -57,4 +68,4 @@ The restore command with the full path is printed at the end of each script run.
 
 ## Credits
 
-Based on benchmark research from [GitHub issue discussion](https://github.com/anthropics/claude-code/issues) comparing patched vs unpatched Claude Code across accuracy, cost, and latency.
+Based on benchmark research from [this GitHub issue comment](https://github.com/anthropics/claude-code/issues/42796#issuecomment-4241798333) comparing patched vs unpatched Claude Code across accuracy, cost, and latency.

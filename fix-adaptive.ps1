@@ -38,6 +38,41 @@ if (-not $CliJs) {
 }
 
 if (-not $CliJs) {
+    # Check if this is a binary install (official install script)
+    $binaryInstall = $null
+    try {
+        $claudePath = (Get-Command claude -ErrorAction Stop).Source
+        $resolved = (Get-Item $claudePath -ErrorAction Stop).Target
+        if (-not $resolved) { $resolved = $claudePath }
+        if ($resolved -match "\.local[\\/]share[\\/]claude" -or $resolved -match "[\\/]versions[\\/]") {
+            $binaryInstall = $resolved
+        }
+    } catch {}
+
+    if ($binaryInstall) {
+        Write-Host "Detected binary install (official install script):" -ForegroundColor Yellow
+        Write-Host "  $binaryInstall"
+        Write-Host ""
+        Write-Host "Binary installs ship a compiled binary, not a patchable cli.js."
+        Write-Host "The cli.js patching cannot be applied to this installation."
+        Write-Host ""
+        Write-Host "Setting the env var instead (covers the main API path)..."
+
+        $currentVal = [System.Environment]::GetEnvironmentVariable("CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING", "User")
+        if ($currentVal -eq "1") {
+            Write-Host "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING already set in user environment." -ForegroundColor Green
+        } else {
+            [System.Environment]::SetEnvironmentVariable("CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING", "1", "User")
+            $env:CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"
+            Write-Host "Set CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 in user environment." -ForegroundColor Green
+        }
+
+        Write-Host ""
+        Write-Host "Note: The env var only covers 1 of 4 code paths." -ForegroundColor Yellow
+        Write-Host "For full patching, reinstall via: npm install -g @anthropic-ai/claude-code" -ForegroundColor Yellow
+        exit 0
+    }
+
     Write-Host "ERROR: Could not find cli.js" -ForegroundColor Red
     Write-Host "Make sure Claude Code is installed and 'claude' is in your PATH."
     exit 1

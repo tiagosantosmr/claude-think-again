@@ -53,6 +53,57 @@ if [[ -z "$CLI_JS" ]]; then
 fi
 
 if [[ -z "$CLI_JS" ]]; then
+    # Check if this is a binary install (official install script)
+    BINARY_INSTALL=""
+    if command -v claude &>/dev/null; then
+        RESOLVED=$(readlink -f "$(which claude)" 2>/dev/null || which claude)
+        if [[ "$RESOLVED" == *"/.local/share/claude/"* ]] || [[ "$RESOLVED" == *"/versions/"* ]]; then
+            BINARY_INSTALL="$RESOLVED"
+        fi
+    fi
+
+    if [[ -n "$BINARY_INSTALL" ]]; then
+        echo -e "${YELLOW}Detected binary install (official install script):${NC}"
+        echo "  $BINARY_INSTALL"
+        echo ""
+        echo "Binary installs ship a compiled binary, not a patchable cli.js."
+        echo "The cli.js patching cannot be applied to this installation."
+        echo ""
+        echo -e "Setting the env var instead (covers the main API path)..."
+
+        # Fall back to env var only
+        ENV_LINE='export CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1'
+        SHELL_RC=""
+        if [[ -n "${ZSH_VERSION:-}" ]] || [[ "$SHELL" == */zsh ]]; then
+            SHELL_RC="$HOME/.zshrc"
+        elif [[ -f "$HOME/.bashrc" ]]; then
+            SHELL_RC="$HOME/.bashrc"
+        elif [[ -f "$HOME/.bash_profile" ]]; then
+            SHELL_RC="$HOME/.bash_profile"
+        elif [[ -f "$HOME/.profile" ]]; then
+            SHELL_RC="$HOME/.profile"
+        fi
+
+        if [[ -n "$SHELL_RC" ]]; then
+            if grep -qF 'CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING' "$SHELL_RC" 2>/dev/null; then
+                echo -e "${GREEN}CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING already set in $SHELL_RC${NC}"
+            else
+                echo "" >> "$SHELL_RC"
+                echo "# Disable Claude Code adaptive thinking (covers main API path)" >> "$SHELL_RC"
+                echo "$ENV_LINE" >> "$SHELL_RC"
+                echo -e "${GREEN}Added CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1 to $SHELL_RC${NC}"
+            fi
+        else
+            echo -e "${YELLOW}Could not detect shell profile. Manually add to your shell config:${NC}"
+            echo "  $ENV_LINE"
+        fi
+
+        echo ""
+        echo -e "${YELLOW}Note: The env var only covers 1 of 4 code paths.${NC}"
+        echo -e "${YELLOW}For full patching, reinstall via: npm install -g @anthropic-ai/claude-code${NC}"
+        exit 0
+    fi
+
     echo -e "${RED}ERROR: Could not find cli.js${NC}"
     echo "Make sure Claude Code is installed and 'claude' is in your PATH."
     exit 1
