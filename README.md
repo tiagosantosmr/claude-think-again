@@ -57,4 +57,4 @@ The restore command with the full path is printed at the end of each script run.
 
 ## Credits
 
-Based on benchmark research from [GitHub issue discussion](https://github.com/anthropics/claude-code/issues) comparing patched vs unpatched Claude Code across accuracy, cost, and latency.
+Based on benchmark research from [GitHub issue discussion]([https://github.com/anthropics/claude-code/issues](https://github.com/anthropics/claude-code/issues/42796#issuecomment-4241798333)) comparing patched vs unpatched Claude Code across accuracy, cost, and latency.
